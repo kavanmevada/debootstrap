@@ -1,4 +1,4 @@
-FROM localhost/tools-gcc:latest
+FROM ghcr.io/kavanmevada/debootstrap-iso:tools-gcc
 WORKDIR $LFS/sources
 RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.13.12.tar.xz) \
   && mv $LFS/sources/linux-* $LFS/sources/linux \

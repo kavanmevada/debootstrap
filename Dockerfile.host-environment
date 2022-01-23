@@ -1,4 +1,4 @@
-FROM localhost/host-system:latest
+FROM ghcr.io/kavanmevada/debootstrap-iso:host-system
 
 RUN mkdir -pv $LFS/{sources,tools}
 

@@ -1,4 +1,4 @@
-FROM localhost/tools-binutils:latest
+FROM ghcr.io/kavanmevada/debootstrap-iso:tools-binutils
 WORKDIR $LFS/sources
 RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz) \
   && mv $LFS/sources/gcc-* $LFS/sources/gcc \

@@ -1,4 +1,4 @@
-FROM localhost/host-environment:latest
+FROM ghcr.io/kavanmevada/debootstrap-iso:host-environment
 WORKDIR $LFS/sources
 RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.xz) \
   && mv $LFS/sources/binutils-* $LFS/sources/binutils \
