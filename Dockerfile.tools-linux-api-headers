@@ -1,0 +1,11 @@
+FROM localhost/tools-gcc:latest
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.13.12.tar.xz) \
+  && mv $LFS/sources/linux-* $LFS/sources/linux \
+  && pushd $LFS/sources/linux \
+  && make mrproper \
+  && make headers \
+  && find usr/include -name '.*' -delete \
+  && rm usr/include/Makefile \
+  && cp -rv usr/include $LFS/usr \
+  && rm -rf $LFS/sources/linux

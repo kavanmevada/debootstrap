@@ -1,0 +1,22 @@
+FROM debian:sid
+ENV DEBIAN_FRONTEND=noninteractive
+
+### Apt Update
+RUN apt-get update -y
+RUN apt-get install apt-utils -yqq > /dev/null
+RUN ln -sf bash /bin/sh
+RUN apt-get install \
+	binutils bison bzip2 gawk gcc \
+	g++ make patch python3 texinfo \
+	xz-utils file wget \
+	ca-certificates -yqq > /dev/null
+
+ENV LFS=/mnt/lfs
+ENV LC_ALL=POSIX
+ENV LFS_TGT=x86_64-lfs-linux-gnu
+ENV PATH=/usr/bin
+ENV PATH=/bin:$PATH
+ENV PATH=$LFS/tools/bin:$PATH
+ENV CONFIG_SITE=$LFS/usr/share/config.site
+ENV MAKEFLAGS='-j4'
+ENV HOME=$HOME
