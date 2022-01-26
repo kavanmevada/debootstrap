@@ -15,5 +15,6 @@ jobs:
     - name: Build the Docker image
       run: |
         echo $CR_PAT | docker login ghcr.io -u kavanmevada --password-stdin
+        docker build . --file ./hostsystem
       env:
         CR_PAT: ${{ secrets.CR_PAT }}

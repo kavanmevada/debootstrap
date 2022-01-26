@@ -3,7 +3,8 @@
 
 FROM ghcr.io/kavanmevada/debootstrap-iso:tools-libstdcpp AS cross-stage-00
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f m4-*.xz && rm m4-*.xz \
   && mv $LFS/sources/m4-* $LFS/sources/m4 \
   && pushd $LFS/sources/m4 \
   && ./configure --prefix=/usr   \
@@ -18,7 +19,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/m
 
 FROM cross-stage-00 AS cross-stage-01
 WORKDIR $LFS/sources
-RUN wget --tries=10 -O- https://ftp.gnu.org/gnu/ncurses/ncurses-6.2.tar.gz | tar xvzf - -C $LFS/sources \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/ncurses/ncurses-6.2.tar.gz && break; done
+RUN tar xvz -C $LFS/sources -f ncurses-*.gz && rm ncurses-*.gz \
   && mv $LFS/sources/ncurses-* $LFS/sources/ncurses \
   && pushd $LFS/sources/ncurses \
   && sed -i s/mawk// configure \
@@ -47,7 +49,8 @@ RUN wget --tries=10 -O- https://ftp.gnu.org/gnu/ncurses/ncurses-6.2.tar.gz | tar
 
 FROM cross-stage-01 AS cross-stage-02
 WORKDIR $LFS/sources
-RUN wget --tries=10 -O- https://ftp.gnu.org/gnu/bash/bash-5.1.8.tar.gz | tar xvzf - -C $LFS/sources \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/bash/bash-5.1.8.tar.gz && break; done
+RUN tar xvz -C $LFS/sources -f bash-*.gz && rm bash-*.gz \
   && mv $LFS/sources/bash-* $LFS/sources/bash \
   && pushd $LFS/sources/bash \
   && ./configure --prefix=/usr                   \
@@ -64,7 +67,8 @@ RUN wget --tries=10 -O- https://ftp.gnu.org/gnu/bash/bash-5.1.8.tar.gz | tar xvz
 
 FROM cross-stage-02 AS cross-stage-03
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/coreutils/coreutils-8.32.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/coreutils/coreutils-8.32.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f coreutils-*.xz && rm coreutils-*.xz \
   && mv $LFS/sources/coreutils-* $LFS/sources/coreutils \
   && pushd $LFS/sources/coreutils \
   && ./configure --prefix=/usr                     \
@@ -84,7 +88,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/c
 
 FROM cross-stage-03 AS cross-stage-04
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f diffutils-*.xz && rm diffutils-*.xz \
   && mv $LFS/sources/diffutils-* $LFS/sources/diffutils \
   && pushd $LFS/sources/diffutils \
   && ./configure --prefix=/usr --host=$LFS_TGT \
@@ -97,7 +102,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/d
 
 FROM cross-stage-04 AS cross-stage-05
 WORKDIR $LFS/sources
-RUN wget --tries=10 -O- https://astron.com/pub/file/file-5.40.tar.gz | tar xvzf - -C $LFS/sources \
+RUN while true;do wget -T 15 https://astron.com/pub/file/file-5.40.tar.gz && break; done
+RUN tar xvz -C $LFS/sources -f file-*.gz && rm file-*.gz \
   && mv $LFS/sources/file-* $LFS/sources/file \
   && pushd $LFS/sources/file \
   && mkdir build \
@@ -117,7 +123,8 @@ RUN wget --tries=10 -O- https://astron.com/pub/file/file-5.40.tar.gz | tar xvzf 
 
 FROM cross-stage-05 AS cross-stage-06
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/findutils/findutils-4.8.0.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/findutils/findutils-4.8.0.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f findutils-*.xz && rm findutils-*.xz \
   && mv $LFS/sources/findutils-* $LFS/sources/findutils \
   && pushd $LFS/sources/findutils \
   && ./configure --prefix=/usr                   \
@@ -133,7 +140,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/f
 
 FROM cross-stage-06 AS cross-stage-07
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/gawk/gawk-5.1.0.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/gawk/gawk-5.1.0.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f gawk-*.xz && rm gawk-*.xz \
   && mv $LFS/sources/gawk-* $LFS/sources/gawk \
   && pushd $LFS/sources/gawk \
   && sed -i 's/extras//' Makefile.in \
@@ -148,7 +156,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/g
 
 FROM cross-stage-07 AS cross-stage-08
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f grep-*.xz && rm grep-*.xz \
   && mv $LFS/sources/grep-* $LFS/sources/grep \
   && pushd $LFS/sources/grep \
   && ./configure --prefix=/usr   \
@@ -162,7 +171,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/g
 
 FROM cross-stage-08 AS cross-stage-09
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/gzip/gzip-1.10.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/gzip/gzip-1.10.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f gzip-*.xz && rm gzip-*.xz \
   && mv $LFS/sources/gzip-* $LFS/sources/gzip \
   && pushd $LFS/sources/gzip \
   && ./configure --prefix=/usr --host=$LFS_TGT \
@@ -176,7 +186,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/g
 
 FROM cross-stage-09 AS cross-stage-10
 WORKDIR $LFS/sources
-RUN wget --tries=10 -O- https://ftp.gnu.org/gnu/make/make-4.3.tar.gz | tar xvzf - -C $LFS/sources \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/make/make-4.3.tar.gz && break; done
+RUN tar xvz -C $LFS/sources -f make-*.gz && rm make-*.gz \
   && mv $LFS/sources/make-* $LFS/sources/make \
   && pushd $LFS/sources/make \
   && ./configure --prefix=/usr   \
@@ -192,7 +203,8 @@ RUN wget --tries=10 -O- https://ftp.gnu.org/gnu/make/make-4.3.tar.gz | tar xvzf 
 
 FROM cross-stage-10 AS cross-stage-11
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f patch-*.xz && rm patch-*.xz \
   && mv $LFS/sources/patch-* $LFS/sources/patch \
   && pushd $LFS/sources/patch \
   && ./configure --prefix=/usr   \
@@ -206,7 +218,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/p
 
 FROM cross-stage-11 AS cross-stage-12
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f sed-*.xz && rm sed-*.xz \
   && mv $LFS/sources/sed-* $LFS/sources/sed \
   && pushd $LFS/sources/sed \
   && ./configure --prefix=/usr   \
@@ -220,7 +233,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/s
 
 FROM cross-stage-12 AS cross-stage-13
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f tar-*.xz && rm tar-*.xz \
   && mv $LFS/sources/tar-* $LFS/sources/tar \
   && pushd $LFS/sources/tar \
   && ./configure --prefix=/usr                     \
@@ -235,7 +249,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/t
 
 FROM cross-stage-13 AS cross-stage-14
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://tukaani.org/xz/xz-5.2.5.tar.xz) \
+RUN while true;do wget -T 15 https://tukaani.org/xz/xz-5.2.5.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f xz-*.xz && rm xz-*.xz \
   && mv $LFS/sources/xz-* $LFS/sources/xz \
   && pushd $LFS/sources/xz \
   && ./configure --prefix=/usr                     \
@@ -251,7 +266,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://tukaani.org/xz/xz
 
 FROM cross-stage-14 AS cross-stage-15
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f binutils-*.xz && rm binutils-*.xz \
   && mv $LFS/sources/binutils-* $LFS/sources/binutils \
   && pushd $LFS/sources/binutils \
   && mkdir -v build \
@@ -274,7 +290,8 @@ RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/b
 
 FROM cross-stage-15 AS cross-stage-last
 WORKDIR $LFS/sources
-RUN tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz) \
+RUN while true;do wget -T 15 https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz && break; done
+RUN tar -xvJ -C $LFS/sources -f gcc-*.xz && rm gcc-*.xz \
   && mv $LFS/sources/gcc-* $LFS/sources/gcc \
   && pushd $LFS/sources/gcc \
   && tar -xvJ -C $LFS/sources -f <(wget --tries=10 -O - https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz) \
