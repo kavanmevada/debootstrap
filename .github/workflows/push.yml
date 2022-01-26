@@ -1,9 +1,29 @@
-name: Docker Compose Actions Workflow
-on: push
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+
 jobs:
-  test:
+
+  build:
+
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Build the stack
-        run: docker-compose -f docker-compose.yml run web
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        echo $CR_PAT | docker login ghcr.io -u kavanmevada --password-stdin
+        docker build --no-cache -t ghcr.io/kavanmevada/debootstrap-iso:host-system . --file Dockerfile.host-system
+        docker build --no-cache -t ghcr.io/kavanmevada/debootstrap-iso:host-environment . --file Dockerfile.host-environment
+        docker build --no-cache -t ghcr.io/kavanmevada/debootstrap-iso:tools-binutils . --file Dockerfile.tools-binutils
+        docker build --no-cache -t ghcr.io/kavanmevada/debootstrap-iso:tools-gcc . --file Dockerfile.tools-gcc
+        docker build --no-cache -t ghcr.io/kavanmevada/debootstrap-iso:tools-linux-api-headers . --file Dockerfile.tools-linux-api-headers
+        docker push ghcr.io/kavanmevada/debootstrap-iso:host-system
+        docker push ghcr.io/kavanmevada/debootstrap-iso:host-environment
+        docker push ghcr.io/kavanmevada/debootstrap-iso:tools-binutils
+        docker push ghcr.io/kavanmevada/debootstrap-iso:tools-gcc
+        docker push ghcr.io/kavanmevada/debootstrap-iso:tools-linux-api-headers
+      env:
+        CR_PAT: ${{ secrets.CR_PAT }}
