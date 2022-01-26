@@ -1,0 +1,12 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-file
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/findutils/findutils-4.8.0.tar.xz) \
+  && mv $LFS/sources/findutils-* $LFS/sources/findutils \
+  && pushd $LFS/sources/findutils \
+  && ./configure --prefix=/usr                   \
+            --localstatedir=/var/lib/locate \
+            --host=$LFS_TGT                 \
+            --build=$(build-aux/config.guess) \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/findutils

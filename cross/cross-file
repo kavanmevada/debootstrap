@@ -1,0 +1,17 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-diffutils
+WORKDIR $LFS/sources
+RUN wget -O- https://astron.com/pub/file/file-5.40.tar.gz | tar xvzf - -C $LFS/sources \
+  && mv $LFS/sources/file-* $LFS/sources/file \
+  && pushd $LFS/sources/file \
+  && mkdir build \
+  && pushd build \
+  && ../configure --disable-bzlib      \
+               --disable-libseccomp \
+               --disable-xzlib      \
+               --disable-zlib \
+  && make \
+  && popd \
+  && ./configure --prefix=/usr --host=$LFS_TGT --build=$(./config.guess) \
+  && make FILE_COMPILE=$(pwd)/build/src/file \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/file

@@ -1,0 +1,11 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-make
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz) \
+  && mv $LFS/sources/patch-* $LFS/sources/patch \
+  && pushd $LFS/sources/patch \
+  && ./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess) \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/patch

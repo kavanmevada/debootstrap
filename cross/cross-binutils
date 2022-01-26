@@ -1,0 +1,19 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-xz
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.xz) \
+  && mv $LFS/sources/binutils-* $LFS/sources/binutils \
+  && pushd $LFS/sources/binutils \
+  && mkdir -v build \
+  && cd build \
+  && ../configure                   \
+    --prefix=/usr              \
+    --build=$(../config.guess) \
+    --host=$LFS_TGT            \
+    --disable-nls              \
+    --enable-shared            \
+    --disable-werror           \
+    --enable-64-bit-bfd \
+  && make \
+  && make DESTDIR=$LFS install -j1 \
+  && install -vm755 libctf/.libs/libctf.so.0.0.0 $LFS/usr/lib \
+  && rm -rf $LFS/sources/binutils

@@ -1,0 +1,12 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-gzip
+WORKDIR $LFS/sources
+RUN wget -O- https://ftp.gnu.org/gnu/make/make-4.3.tar.gz | tar xvzf - -C $LFS/sources \
+  && mv $LFS/sources/make-* $LFS/sources/make \
+  && pushd $LFS/sources/make \
+  && ./configure --prefix=/usr   \
+            --without-guile \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess) \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/make

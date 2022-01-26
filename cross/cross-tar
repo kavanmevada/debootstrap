@@ -1,0 +1,11 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-sed
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz) \
+  && mv $LFS/sources/tar-* $LFS/sources/tar \
+  && pushd $LFS/sources/tar \
+  && ./configure --prefix=/usr                     \
+            --host=$LFS_TGT                   \
+            --build=$(build-aux/config.guess) \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/tar

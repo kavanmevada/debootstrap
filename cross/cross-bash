@@ -1,0 +1,13 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-ncurses
+WORKDIR $LFS/sources
+RUN wget -O- https://ftp.gnu.org/gnu/bash/bash-5.1.8.tar.gz | tar xvzf - -C $LFS/sources \
+  && mv $LFS/sources/bash-* $LFS/sources/bash \
+  && pushd $LFS/sources/bash \
+  && ./configure --prefix=/usr                   \
+            --build=$(support/config.guess) \
+            --host=$LFS_TGT                 \
+            --without-bash-malloc \
+  && make \
+  && make DESTDIR=$LFS install \
+  && ln -sv bash $LFS/bin/sh \
+  && rm -rf $LFS/sources/bash

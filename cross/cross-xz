@@ -1,0 +1,13 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-tar
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://tukaani.org/xz/xz-5.2.5.tar.xz) \
+  && mv $LFS/sources/xz-* $LFS/sources/xz \
+  && pushd $LFS/sources/xz \
+  && ./configure --prefix=/usr                     \
+            --host=$LFS_TGT                   \
+            --build=$(build-aux/config.guess) \
+            --disable-static                  \
+            --docdir=/usr/share/doc/xz-5.2.5 \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/xz

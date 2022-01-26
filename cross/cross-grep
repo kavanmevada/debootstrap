@@ -1,0 +1,10 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-gawk
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz) \
+  && mv $LFS/sources/grep-* $LFS/sources/grep \
+  && pushd $LFS/sources/grep \
+  && ./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/grep

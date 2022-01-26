@@ -1,0 +1,166 @@
+FROM debian:sid as hostsystem
+ENV DEBIAN_FRONTEND=noninteractive
+
+### Apt Update
+RUN apt-get update -y
+RUN apt-get install apt-utils -yqq > /dev/null
+RUN ln -sf bash /bin/sh
+RUN apt-get install \
+	binutils bison bzip2 gawk gcc \
+	g++ make patch python3 texinfo \
+	xz-utils file wget \
+	ca-certificates -yqq > /dev/null
+
+ENV LFS=/mnt/lfs
+ENV LC_ALL=POSIX
+ENV LFS_TGT=x86_64-lfs-linux-gnu
+ENV PATH=/usr/bin
+ENV PATH=/bin:$PATH
+ENV PATH=$LFS/tools/bin:$PATH
+ENV CONFIG_SITE=$LFS/usr/share/config.site
+ENV MAKEFLAGS='-j4'
+ENV HOME=$HOME
+
+
+
+FROM hostsystem as hostsystem-stage-last
+
+RUN mkdir -pv $LFS/{sources,tools}
+
+RUN mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin}
+RUN for i in bin lib sbin; do ln -sv usr/$i $LFS/$i; done
+RUN mkdir -pv $LFS/lib64
+RUN chown -v root $LFS/{usr{,/*},lib,var,etc,bin,sbin,tools,sources}
+RUN chown -v root $LFS/lib64
+
+
+
+
+FROM hostsystem-stage-last as environment-stage-00
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.xz) \
+  && mv $LFS/sources/binutils-* $LFS/sources/binutils \
+  && pushd $LFS/sources/binutils \
+  && mkdir -v build \
+  && cd build \
+  && ../configure       \
+    --prefix=$LFS/tools \
+    --with-sysroot=$LFS \
+    --target=$LFS_TGT   \
+    --disable-nls       \
+    --disable-werror    \
+  && make \
+  && make install \
+  && popd \
+  && rm -rf $LFS/sources/binutils
+
+
+FROM environment-stage-00 as environment-stage-01
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz) \
+  && mv $LFS/sources/gcc-* $LFS/sources/gcc \
+  && pushd $LFS/sources/gcc \
+  && tar -xvJ -C $LFS/sources -f <(wget -O - https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz) \
+  && mv -v $LFS/sources/mpfr-* mpfr \
+  && tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz) \
+  && mv -v $LFS/sources/gmp-* gmp \
+  && wget -O- https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz | tar xvzf - -C $LFS/sources \
+  && mv -v $LFS/sources/mpc-* mpc \
+  && sed -e '/m64=/s/lib64/lib/' -i.orig gcc/config/i386/t-linux64 \
+  && mkdir -v build \
+  && cd build \
+  && ../configure                                  \
+    --target=$LFS_TGT                              \
+    --prefix=$LFS/tools                            \
+    --with-glibc-version=2.11                      \
+    --with-sysroot=$LFS                            \
+    --with-newlib                                  \
+    --without-headers                              \
+    --enable-initfini-array                        \
+    --disable-nls                                  \
+    --disable-shared                               \
+    --disable-multilib                             \
+    --disable-decimal-float                        \
+    --disable-threads                              \
+    --disable-libatomic                            \
+    --disable-libgomp                              \
+    --disable-libquadmath                          \
+    --disable-libssp                               \
+    --disable-libvtv                               \
+    --disable-libstdcxx                            \
+    --enable-languages=c,c++                       \
+  && make \
+  && make install \
+  && cd $LFS/sources/gcc \
+  && cat gcc/limitx.h gcc/glimits.h gcc/limity.h > `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/install-tools/include/limits.h \
+  && rm -rf $LFS/sources/gcc
+
+
+
+FROM environment-stage-01 as environment-stage-02
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.13.12.tar.xz) \
+  && mv $LFS/sources/linux-* $LFS/sources/linux \
+  && pushd $LFS/sources/linux \
+  && make mrproper \
+  && make headers \
+  && find usr/include -name '.*' -delete \
+  && rm usr/include/Makefile \
+  && cp -rv usr/include $LFS/usr \
+  && rm -rf $LFS/sources/linux
+
+
+
+FROM environment-stage-02 as environment-stage-03
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/glibc/glibc-2.34.tar.xz) \
+  && mv $LFS/sources/glibc-* $LFS/sources/glibc \
+  && pushd $LFS/sources/glibc \
+  && ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64 \
+  && ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3 \
+  && patch -Np1 -i <(https://www.linuxfromscratch.org/patches/lfs/11.0/glibc-2.34-fhs-1.patch) \
+  && mkdir -v build \
+  && cd build \
+  && echo "rootsbindir=/usr/sbin" > configparms \
+  && ../configure                             \
+      --prefix=/usr                      \
+      --host=$LFS_TGT                    \
+      --build=$(../scripts/config.guess) \
+      --enable-kernel=3.2                \
+      --with-headers=$LFS/usr/include    \
+      libc_cv_slibdir=/usr/lib \
+  && make \
+  && make DESTDIR=$LFS install \
+  && sed '/RTLDLIST=/s@/usr@@g' -i $LFS/usr/bin/ldd \
+  && $LFS/tools/libexec/gcc/$LFS_TGT/11.2.0/install-tools/mkheaders \
+  && rm -rf $LFS/sources/glibc
+
+
+
+
+
+FROM environment-stage-03 as environment-stage-last
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz) \
+  && mv $LFS/sources/gcc-* $LFS/sources/gcc \
+  && pushd $LFS/sources/gcc \
+  && tar -xvJ -C $LFS/sources -f <(wget -O - https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz) \
+  && mv -v $LFS/sources/mpfr-* mpfr \
+  && tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz) \
+  && mv -v $LFS/sources/gmp-* gmp \
+  && wget -O- https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz | tar xvzf - -C $LFS/sources \
+  && mv -v $LFS/sources/mpc-* mpc \
+  && sed -e '/m64=/s/lib64/lib/' -i.orig gcc/config/i386/t-linux64 \
+  && mkdir -v build \
+  && cd build \
+  && ../libstdc++-v3/configure           \
+    --host=$LFS_TGT                 \
+    --build=$(../config.guess)      \
+    --prefix=/usr                   \
+    --disable-multilib              \
+    --disable-nls                   \
+    --disable-libstdcxx-pch         \
+    --with-gxx-include-dir=/tools/$LFS_TGT/include/c++/11.2.0                       \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/gcc

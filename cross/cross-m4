@@ -1,0 +1,11 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:tools-libstdcpp
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz) \
+  && mv $LFS/sources/m4-* $LFS/sources/m4 \
+  && pushd $LFS/sources/m4 \
+  && ./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess) \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/m4

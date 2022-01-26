@@ -1,0 +1,10 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-patch
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz) \
+  && mv $LFS/sources/sed-* $LFS/sources/sed \
+  && pushd $LFS/sources/sed \
+  && ./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/sed

@@ -1,0 +1,12 @@
+FROM ghcr.io/kavanmevada/debootstrap-iso:cross-findutils
+WORKDIR $LFS/sources
+RUN tar -xvJ -C $LFS/sources -f <(wget -O - https://ftp.gnu.org/gnu/gawk/gawk-5.1.0.tar.xz) \
+  && mv $LFS/sources/gawk-* $LFS/sources/gawk \
+  && pushd $LFS/sources/gawk \
+  && sed -i 's/extras//' Makefile.in \
+  && ./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(./config.guess) \
+  && make \
+  && make DESTDIR=$LFS install \
+  && rm -rf $LFS/sources/gawk
